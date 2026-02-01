@@ -11,7 +11,7 @@
 
 <header class="bg-black border-b text-xs">
   <div class="mx-auto p-1">
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex flex-wrap items-center justify-between gap-1">
       <div class="  text-white">
         {title}
         {subtitle} v.{version}
