@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
+    "labels": "node scripts/compute_label_placements.mjs",
     "deploy": "gh-pages -d build --dotfiles  --cname fanzinet.giacomo.website"
   },
   "devDependencies": {

@@ -44,7 +44,7 @@
   <div class="text-xs leading-tight text-black/70">
      <strong class="text-black">{items.length}</strong> fanzine
   </div>
-  <div class="grid grid-cols-2 md:grid-cols-6  gap-3 p-2" role="list" aria-label="Fanzines">
+  <div class="grid grid-cols-3 md:grid-cols-8  gap-3 p-2" role="list" aria-label="Fanzines">
     {#each items as item, i (itemKey(item, i))}
       <div role="listitem" class=" bg-white p-1 text-left shadow-sm">
         <div class="aspect-[3/4] w-full overflow-hidden  bg-black/5">

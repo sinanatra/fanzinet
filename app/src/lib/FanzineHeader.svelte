@@ -22,14 +22,14 @@
           href={authorUrl}
           target="_blank"
           rel="noopener noreferrer"
-          class="text-blue-600 hover:text-blue-800">↗</a
+          class="text-blue-600 hover:text-blue-800">Paolo</a
         >
         ·
         <a
           href={developerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          class="text-blue-600 hover:text-blue-800">↗</a
+          class="text-blue-600 hover:text-blue-800">Giacomo</a
         >
       </div>
     </div>

@@ -31,6 +31,7 @@
   let italy = null;
   let allFanzines = [];
   let points = [];
+  let labelPlacements = [];
   let loading = true;
   let error = "";
 
@@ -86,6 +87,18 @@
       const text = await csvRes.text();
       allFanzines = csvParse(text).map(normalizeRow);
 
+      try {
+        const labelsRes = await fetch("/data/label_placements.json");
+        if (labelsRes.ok) {
+          const labelsData = await labelsRes.json();
+          labelPlacements = Array.isArray(labelsData)
+            ? labelsData
+            : labelsData.labels || [];
+        }
+      } catch (err) {
+        console.warn("Failed to load label placements", err);
+      }
+
       points = allFanzines
         .map((f) => {
           const lat = parseFloat(f.latitude);
@@ -105,7 +118,7 @@
 <div class="bg-white">
   <FanzineHeader />
 
-  <div class="sticky top-0 z-0 h-[60vh] w-full">
+  <div class="sticky top-0 z-0 h-[70vh] w-full">
     <div class="h-full w-full overflow-hidden bg-white">
       <!-- {#if loading}
         <div class="p-4 text-">Loading…</div>
@@ -115,6 +128,7 @@
       <FanzineMap
         {italy}
         {points}
+        {labelPlacements}
         query={searchQuery}
         projectionZoom={1}
         filteredItems={selectedCity
