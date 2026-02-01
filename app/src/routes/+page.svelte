@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import { csvParse } from "d3-dsv";
   import Header from "$lib/Header.svelte";
+  import Footer from "$lib/Footer.svelte";
   import Map from "$lib/Map.svelte";
   import SearchPanel from "$lib/SearchPanel.svelte";
   import ResultsGrid from "$lib/ResultsGrid.svelte";
@@ -162,3 +163,5 @@
           : allFanzines}
   />
 </div>
+
+<Footer />
