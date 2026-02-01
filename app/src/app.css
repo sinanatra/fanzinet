@@ -9,9 +9,7 @@
 }
 
 body {
-  min-height: 100dvh;
-  overflow-x: hidden;
-  overflow-y: auto;
+  height: 100dvh;
   font-family: 'Courier New', Courier, monospace;
   background-color: gainsboro;
 }

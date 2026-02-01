@@ -35,20 +35,21 @@
 
     return parts.length ? `${parts.join("|")}|${index}` : String(index);
   }
-
 </script>
 
-<div class="py-0.5">
-  <div class="text-xs leading-tight text-black/70">
-     <strong class="text-black">{items.length}</strong> fanzine
-  </div>
-  <div class="grid grid-cols-5 md:grid-cols-12  gap-0.5 p-0.5" role="list" aria-label="Fanzines">
+<div class="h-screen">
+
+  <div
+    class="grid grid-cols-2 md:grid-cols-8 gap-0.5 p-0.5"
+    role="list"
+    aria-label="Fanzines"
+  >
     {#each items as item, i (itemKey(item, i))}
       <div role="listitem" class=" bg-white p-0.5 text-left shadow-sm">
-        <div class="aspect-[3/4] w-full overflow-hidden  bg-black/5">
+        <div class="aspect-[3/4] w-full overflow-hidden bg-black/5">
           {#if item.ogImage}
             <img
-              class="h-full w-full object-contain"
+              class="h-full w-full object-fill"
               src={toAbsoluteUrl(item.ogImage)}
               alt={item.fanzine || "Fanzine cover"}
               loading="lazy"
@@ -83,7 +84,7 @@
           </div>
         {/if}
 
-        <div class="mt-0.5 gap-0.5 ">
+        <div class="mt-0.5 gap-0.5">
           {#if item?.pdfHref}
             <a
               class=" bg-black/5 px-0.5 py-0 text-[.6rem] hover:bg-black/10"

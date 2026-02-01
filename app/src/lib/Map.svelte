@@ -308,6 +308,7 @@
 </script>
 
 <section class="bg-[#ccc]">
+  
   <div class="absolute top-1 right-1 z-50 space-y-1 text-xs">
     <button
       on:click={() => handleZoom(1)}

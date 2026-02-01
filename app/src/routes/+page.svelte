@@ -47,7 +47,7 @@
             f.genre?.toLowerCase().includes(q)
           );
         })
-      : []
+      : [],
   );
 
   let visibleCount = $derived(
@@ -60,7 +60,7 @@
             p.genre?.toLowerCase().includes(q)
           );
         }).length
-      : points.length
+      : points.length,
   );
 
   function onClearSearch() {
@@ -117,10 +117,9 @@
   });
 </script>
 
-
 <Header />
 
-<div class="sticky top-0 z-0 h-[65vh] w-full">
+<div class="sticky top-0 z-0 max-h-[65vh] w-full">
   <div class="h-full w-full overflow-hidden bg-white">
     <!-- {#if loading}
         <div class="p-4 text-">Loading…</div>
