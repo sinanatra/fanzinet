@@ -12,4 +12,11 @@ body {
   min-height: 100dvh;
   overflow-x: hidden;
   overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+
+::selection {
+    color: white;
+    background-color: black;
 }

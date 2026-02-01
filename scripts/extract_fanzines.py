@@ -49,12 +49,15 @@ class ProjectInfoParser(HTMLParser):
         self.og_image: str | None = None
         self.title: str | None = None
         self.first_pdf_href: str | None = None
+        self.description: str | None = None
 
         self._in_project_info_div = False
         self._project_info_div_depth = 0
         self._in_h4 = False
         self._in_p = False
         self._in_title = False
+        self._in_description_col = False
+        self._description_parts: list[str] = []
 
         self._buffer: list[str] = []
         self._current_key: str | None = None
@@ -74,13 +77,17 @@ class ProjectInfoParser(HTMLParser):
 
         if tag.lower() == "div":
             class_attr = attrs_dict.get("class", "")
+            classes = class_attr.split()
+            
             if self._in_project_info_div:
                 self._project_info_div_depth += 1
-            elif "project-info" in class_attr.split():
+            elif "project-info" in classes:
                 self._in_project_info_div = True
                 self._project_info_div_depth = 1
                 self._current_key = None
                 self._current_key_has_value = False
+            elif "col-md-7" in classes:
+                self._in_description_col = True
 
         if tag.lower() == "h4" and self._in_project_info_div:
             self._commit_open_p()
@@ -88,6 +95,10 @@ class ProjectInfoParser(HTMLParser):
             self._in_h4 = True
 
         if tag.lower() == "p" and self._in_project_info_div and self._current_key and not self._current_key_has_value:
+            self._flush_buffer()
+            self._in_p = True
+
+        if tag.lower() == "p" and self._in_description_col and not self._in_project_info_div:
             self._flush_buffer()
             self._in_p = True
 
@@ -101,7 +112,9 @@ class ProjectInfoParser(HTMLParser):
             prop = attrs_dict.get("property", "").lower()
             content = attrs_dict.get("content", "")
             if prop == "og:image" and content:
-                self.og_image = content
+                # Skip coming_soon placeholder images
+                if "coming_soon" not in content.lower():
+                    self.og_image = content
 
         if tag.lower() == "title":
             self._flush_buffer()
@@ -121,7 +134,18 @@ class ProjectInfoParser(HTMLParser):
             self._in_h4 = False
 
         if tag.lower() == "p" and self._in_p:
-            self._commit_open_p()
+            value = _clean_text(self._flush_buffer())
+            if self._in_description_col and not self._in_project_info_div and value:
+                # Filter out PDF download instructions
+                value = re.sub(r"-->\s*PDF\s*\[.*?\]", "", value, flags=re.IGNORECASE).strip()
+                # Filter out "click here to return to map" link text
+                value = re.sub(r"clicca\s+QUI\s+per\s+tornare\s+alla\s+Mappa\s+delle\s+Fanzine", "", value, flags=re.IGNORECASE).strip()
+                if value:
+                    self._description_parts.append(value)
+            elif self._in_project_info_div and self._current_key and value:
+                self.project_info[self._current_key] = value
+                self._current_key_has_value = True
+            self._in_p = False
 
         if tag.lower() == "title" and self._in_title:
             title = _clean_text(self._flush_buffer())
@@ -131,16 +155,24 @@ class ProjectInfoParser(HTMLParser):
         if tag.lower() == "div" and self._in_project_info_div:
             self._project_info_div_depth -= 1
             if self._project_info_div_depth <= 0:
-                self._commit_open_p()
+                if self._in_p:
+                    self._commit_open_p()
                 self._in_project_info_div = False
                 self._project_info_div_depth = 0
                 self._in_h4 = False
                 self._in_p = False
                 self._current_key = None
                 self._current_key_has_value = False
+        
+        if tag.lower() == "div" and self._in_description_col:
+            if self._description_parts:
+                self.description = "\n".join(self._description_parts)
+            self._in_description_col = False
 
     def handle_data(self, data: str) -> None:
-        if self._in_h4 or self._in_p or self._in_title:
+        if self._in_h4 or self._in_title:
+            self._buffer.append(data)
+        elif self._in_p:
             self._buffer.append(data)
 
     def _flush_buffer(self) -> str:
@@ -285,6 +317,7 @@ def main() -> int:
             "year_start": year_start or "",
             "year_end": year_end or "",
             "genre": genre or "",
+            "description": parser.description or "",
             "pdf_href": parser.first_pdf_href or "",
             "og_image": parser.og_image or "",
             "latitude": "",

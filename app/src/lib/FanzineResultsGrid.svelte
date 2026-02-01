@@ -5,6 +5,8 @@
 
   const baseUrl = "https://www.paolopalmacci.it/capitmundi/";
 
+  let expandedIndex = null;
+
   function toAbsoluteUrl(maybeRelative) {
     if (!maybeRelative) return "";
     if (/^https?:\/\//i.test(maybeRelative)) return maybeRelative;
@@ -35,13 +37,14 @@
 
     return parts.length ? `${parts.join("|")}|${index}` : String(index);
   }
+
 </script>
 
 <div class="py-2">
   <div class="text-xs leading-tight text-black/70">
      <strong class="text-black">{items.length}</strong> fanzine
   </div>
-  <div class="grid grid-cols-6 gap-3 p-2" role="list" aria-label="Fanzines">
+  <div class="grid grid-cols-2 md:grid-cols-6  gap-3 p-2" role="list" aria-label="Fanzines">
     {#each items as item, i (itemKey(item, i))}
       <div role="listitem" class=" bg-white p-1 text-left shadow-sm">
         <div class="aspect-[3/4] w-full overflow-hidden  bg-black/5">
@@ -64,6 +67,23 @@
         <div class="mt-0.5 line-clamp-2 leading-tight">
           {item.genre || "—"}{yearsLabel(item) ? ` · ${yearsLabel(item)}` : ""}
         </div>
+
+        {#if item.description}
+          <div class="mt-2 text-xs leading-snug text-black/60">
+            <div class={expandedIndex === i ? "" : "line-clamp-3"}>
+              {item.description}
+            </div>
+            <button
+              type="button"
+              class="mt-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+              on:click={() => {
+                expandedIndex = expandedIndex === i ? null : i;
+              }}
+            >
+              {expandedIndex === i ? "Read less" : "Read more"}
+            </button>
+          </div>
+        {/if}
 
         <div class="mt-2 gap-2 ">
           {#if item?.pdfHref}

@@ -21,9 +21,11 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
+		"@sveltejs/adapter-static": "^3.0.10",
 		"d3-dsv": "^3.0.1",
 		"d3-force": "^3.0.0",
 		"d3-geo": "^3.1.1",
+		"gh-pages": "^6.3.0",
 		"leaflet": "^1.9.4"
 	}
 }

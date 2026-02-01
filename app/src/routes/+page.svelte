@@ -3,6 +3,7 @@
 <script>
   import { onMount } from "svelte";
   import { csvParse } from "d3-dsv";
+  import FanzineHeader from "$lib/FanzineHeader.svelte";
   import FanzineMap from "$lib/FanzineMap.svelte";
   import FanzineSearchPanel from "$lib/FanzineSearchPanel.svelte";
   import FanzineResultsGrid from "$lib/FanzineResultsGrid.svelte";
@@ -19,6 +20,7 @@
       yearStart: row.year_start,
       yearEnd: row.year_end,
       genre: row.genre,
+      description: row.description,
       pdfHref: row.pdf_href,
       ogImage: row.og_image,
       latitude: row.latitude,
@@ -34,6 +36,7 @@
 
   let searchQuery = "";
   let selectedCity = null;
+  let viewportItems = [];
 
   $: filteredCities = searchQuery
     ? allFanzines.filter((f) => {
@@ -66,12 +69,16 @@
     selectedCity = event.detail;
   }
 
+  function onVisibleItemsChange(event) {
+    viewportItems = event.detail;
+  }
+
   onMount(async () => {
     try {
       loading = true;
 
-      const geoRes = await fetch("/data/italy.geo.json");
-      if (!geoRes.ok) throw new Error("Failed to load italy.geo.json");
+      const geoRes = await fetch("/data/italy2.geojson");
+      if (!geoRes.ok) throw new Error("Failed to load geojson");
       italy = await geoRes.json();
 
       const csvRes = await fetch("/fanzines.csv");
@@ -91,30 +98,34 @@
       error = e instanceof Error ? e.message : String(e);
     } finally {
       loading = false;
-      // setTimeout(() => {
-      //   window.scrollTo(0, window.innerHeight * 0.3);
-      // }, 0);
     }
   });
 </script>
 
 <div class="bg-white">
-  <div class="sticky top-0 z-0 h-[80vh] w-full">
+  <FanzineHeader />
+
+  <div class="sticky top-0 z-0 h-[60vh] w-full">
     <div class="h-full w-full overflow-hidden bg-white">
-      {#if loading}
+      <!-- {#if loading}
         <div class="p-4 text-">Loading…</div>
       {:else if error}
         <div class="p-4 text-sm">{error}</div>
-      {:else}
-        <FanzineMap
-          {italy}
-          {points}
-          query={searchQuery}
-          projectionZoom={1}
-          filteredItems={selectedCity ? [selectedCity] : (searchQuery ? filteredCities : allFanzines)}
-          on:select={onMapSelect}
-        />
-      {/if}
+      {:else} -->
+      <FanzineMap
+        {italy}
+        {points}
+        query={searchQuery}
+        projectionZoom={1}
+        filteredItems={selectedCity
+          ? [selectedCity]
+          : searchQuery
+            ? filteredCities
+            : allFanzines}
+        on:select={onMapSelect}
+        on:visibleItemsChange={onVisibleItemsChange}
+      />
+      <!-- {/if} -->
     </div>
   </div>
 
@@ -133,7 +144,9 @@
         ? [selectedCity]
         : searchQuery
           ? filteredCities
-          : allFanzines}
+          : viewportItems.length > 0
+            ? viewportItems
+            : allFanzines}
     />
   </div>
 </div>

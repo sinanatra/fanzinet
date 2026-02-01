@@ -30,10 +30,14 @@
 
   let plotted = [];
   let filteredPlotted = [];
+  let visibleItems = [];
 
-  let viewScale = 2;
-  let viewTranslateX = -800;
-  let viewTranslateY = -200;
+  const baseTranslateX = 0;
+  const baseTranslateY = 0;
+
+  let viewScale = 1;
+  let viewTranslateX = baseTranslateX;
+  let viewTranslateY = baseTranslateY;
   let panning = false;
   let panStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
   let panMoved = false;
@@ -62,66 +66,60 @@
     return path.some((node) => node?.dataset && "labelHit" in node.dataset);
   }
 
-  function zoomToBounds(items) {
-    if (!items || items.length === 0 || !projection) return;
-    
-    const lats = items.map(p => parseFloat(p.latitude)).filter(isFinite);
-    const lons = items.map(p => parseFloat(p.longitude)).filter(isFinite);
-    
-    if (lats.length === 0 || lons.length === 0) return;
-    
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLon = Math.min(...lons);
-    const maxLon = Math.max(...lons);
-    
-    const centerLat = (minLat + maxLat) / 2;
-    const centerLon = (minLon + maxLon) / 2;
-    
-    const [centerX, centerY] = projection([centerLon, centerLat]);
-    
-    // Calculate zoom level based on bounds
-    const topLeft = projection([minLon, maxLat]);
-    const bottomRight = projection([maxLon, minLat]);
-    
-    const boundsWidth = Math.abs(bottomRight[0] - topLeft[0]);
-    const boundsHeight = Math.abs(bottomRight[1] - topLeft[1]);
-    
-    const padding = 100;
-    const zoomX = (mapWidth - padding) / boundsWidth;
-    const zoomY = (mapHeight - padding) / boundsHeight;
-    const newScale = Math.min(zoomX, zoomY, 6);
-    
-    viewScale = newScale;
-    viewTranslateX = mapWidth / 2 - centerX * newScale;
-    viewTranslateY = mapHeight / 2 - centerY * newScale;
-  }
-
-  function handleZoom(direction) {
-    const factor = direction > 0 ? 1.25 : 1 / 1.25;
+  function handleZoom(
+    direction,
+    zoomCenterX = mapWidth / 2,
+    zoomCenterY = mapHeight / 2,
+  ) {
+    const factor = direction > 0 ? 1.1 : 1 / 1.1;
     const nextScale = Math.max(0.5, Math.min(8, viewScale * factor));
     if (nextScale === viewScale) return;
-    
-    // Zoom to bounds of filtered items if available
-    if (filteredItems && filteredItems.length > 0 && projection) {
-      const lats = filteredItems.map(p => parseFloat(p.latitude)).filter(isFinite);
-      const lons = filteredItems.map(p => parseFloat(p.longitude)).filter(isFinite);
-      if (lats.length > 0 && lons.length > 0) {
-        const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
-        const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
-        const [centerX, centerY] = projection([centerLon, centerLat]);
-        viewTranslateX = mapWidth / 2 - centerX * nextScale;
-        viewTranslateY = mapHeight / 2 - centerY * nextScale;
-      }
-    }
-    
+
+    viewTranslateX =
+      zoomCenterX - ((zoomCenterX - viewTranslateX) / viewScale) * nextScale;
+    viewTranslateY =
+      zoomCenterY - ((zoomCenterY - viewTranslateY) / viewScale) * nextScale;
+
     viewScale = nextScale;
+  }
+
+  function calculateVisibleItems() {
+    if (!projection || !points || points.length === 0) {
+      visibleItems = [];
+      return;
+    }
+
+    const padding = 100;
+    visibleItems = points.filter((p) => {
+      const lat = parseFloat(p.latitude);
+      const lon = parseFloat(p.longitude);
+      if (!isFinite(lat) || !isFinite(lon)) return false;
+
+      const [x, y] = projection([lon, lat]);
+      const screenX = viewTranslateX + x * viewScale;
+      const screenY = viewTranslateY + y * viewScale;
+
+      return (
+        screenX > -padding &&
+        screenX < mapWidth + padding &&
+        screenY > -padding &&
+        screenY < mapHeight + padding
+      );
+    });
+
+    dispatch("visibleItemsChange", visibleItems);
+  }
+
+  function onWheel(e) {
+    e.preventDefault();
+    const direction = e.deltaY > 0 ? -1 : 1;
+    const m = svgPointFromEvent(e);
+    handleZoom(direction, m.x, m.y);
   }
 
   function onPointerDown(e) {
     if (e.button != null && e.button !== 0) return;
     if (isLabelHitEvent(e)) return;
-    e.currentTarget.setPointerCapture?.(e.pointerId);
     panning = true;
     panMoved = false;
     const m = svgPointFromEvent(e);
@@ -138,9 +136,18 @@
     const m = svgPointFromEvent(e);
     const dx = m.x - panStart.x;
     const dy = m.y - panStart.y;
-    if (!panMoved && Math.hypot(dx, dy) > 3) panMoved = true;
-    viewTranslateX = panStart.translateX + dx;
-    viewTranslateY = panStart.translateY + dy;
+    if (!panMoved && Math.hypot(dx, dy) > 3) {
+      panMoved = true;
+
+      if (isLabelHitEvent(e)) {
+        suppressClick = true;
+      }
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    }
+    if (panMoved) {
+      viewTranslateX = panStart.translateX + dx;
+      viewTranslateY = panStart.translateY + dy;
+    }
   }
 
   function onPointerUp(e) {
@@ -426,126 +433,127 @@
     }
   }
 
-  $: if (projection && query && filteredItems && filteredItems.length > 0) {
-    zoomToBounds(filteredItems);
-  }
+  $: viewScale, viewTranslateX, viewTranslateY, calculateVisibleItems();
 </script>
 
-<div class="absolute top-4 right-4 flex z-50 space-x-2">
-  <button
-    on:click={() => handleZoom(-1)}
-    class="bg-white px-2 py-1 font-bold text-black border"
-  >
-    −
-  </button>
-  <button
-    on:click={() => handleZoom(1)}
-    class="bg-white px-2 py-1 font-bold text-black border"
-  >
-    +
-  </button>
-</div>
-<svg
-  class="block h-full w-full cursor-grab touch-none select-none overflow-visible active:cursor-grabbing"
-  viewBox={`0 0 ${mapWidth} ${mapHeight}`}
-  preserveAspectRatio="xMidYMid meet"
-  role="application"
-  aria-label="Fanzine map (pan and zoom)"
-  on:pointerdown={onPointerDown}
-  on:pointermove={onPointerMove}
-  on:pointerup={onPointerUp}
-  on:pointercancel={onPointerCancel}
->
-  <g
-    transform={`translate(${viewTranslateX} ${viewTranslateY}) scale(${viewScale})`}
-  >
-    {#if italyPath}
-      <path
-        d={italyPath}
-        fill="#f5f5f5"
-        stroke="#d4d4d8"
-        stroke-width="1.5"
-        vector-effect="non-scaling-stroke"
-      />
-    {/if}
+<section class="bg-[#ccc]">
+  <div class="absolute top-4 right-4 flex z-50 space-x-2">
+    <button
+      on:click={() => handleZoom(-1)}
+      class="bg-white px-2 py-1 font-bold text-black border"
+    >
+      −
+    </button>
+    <button
+      on:click={() => handleZoom(1)}
+      class="bg-white px-2 py-1 font-bold text-black border"
+    >
+      +
+    </button>
+  </div>
 
-    {#each filteredPlotted as label, i (i)}
-      <g class="transition-opacity duration-200">
-        <g
-          data-label-hit
-          class="cursor-pointer"
-          on:pointerdown|stopPropagation={() => {}}
-          on:pointerup|stopPropagation={() => {
-            console.log("mapLabelPointerUp", {
-              fanzine: label?.fanzine,
-              city: label?.city,
-              canonicalUrl: label?.canonicalUrl,
-            });
-            if (!suppressClick) {
-              onSelect?.(label);
-              dispatch("select", label);
-            }
-          }}
-          on:click={() => {
-            console.log("mapLabelClick", {
-              fanzine: label?.fanzine,
-              city: label?.city,
-              canonicalUrl: label?.canonicalUrl,
-            });
-            if (!suppressClick) {
-              onSelect?.(label);
-              dispatch("select", label);
-            }
-          }}
-          on:keydown={(e) => handleKeydown(e, label)}
-          role="button"
-          tabindex="0"
-        >
-          {#if Math.hypot(label.x - label.x0, label.y - label.y0) > 6}
-            <line
-              x1={label.x0}
-              y1={label.y0}
-              x2={label.x}
-              y2={label.y}
-              stroke="#000"
-              stroke-opacity="0.1"
-              stroke-width="1"
-              vector-effect="non-scaling-stroke"
-            />
-          {/if}
-          <!-- <circle
+  <svg
+    class="block h-full w-full cursor-grab touch-none select-none overflow-visible active:cursor-grabbing"
+    viewBox={`0 0 ${mapWidth} ${mapHeight}`}
+    preserveAspectRatio="xMidYMid meet"
+    role="application"
+    aria-label="Fanzine map (pan and zoom)"
+    on:wheel={onWheel}
+    on:pointerdown={onPointerDown}
+    on:pointermove={onPointerMove}
+    on:pointerup={onPointerUp}
+    on:pointercancel={onPointerCancel}
+  >
+    <g
+      transform={`translate(${viewTranslateX} ${viewTranslateY}) scale(${viewScale})`}
+    >
+      {#if italyPath}
+        <path
+          d={italyPath}
+          fill="#f5f5f5"
+          stroke="#d4d4d8"
+          stroke-width="1.5"
+          vector-effect="non-scaling-stroke"
+        />
+      {/if}
+
+      {#each filteredPlotted as label, i (i)}
+        <g class="transition-opacity duration-200">
+          <g
+            data-label-hit
+            class="cursor-pointer"
+            on:pointerup|stopPropagation={() => {
+              console.log("mapLabelPointerUp", {
+                fanzine: label?.fanzine,
+                city: label?.city,
+                canonicalUrl: label?.canonicalUrl,
+              });
+              if (!suppressClick) {
+                onSelect?.(label);
+                dispatch("select", label);
+              }
+            }}
+            on:click={() => {
+              console.log("mapLabelClick", {
+                fanzine: label?.fanzine,
+                city: label?.city,
+                canonicalUrl: label?.canonicalUrl,
+              });
+              if (!suppressClick) {
+                onSelect?.(label);
+                dispatch("select", label);
+              }
+            }}
+            on:keydown={(e) => handleKeydown(e, label)}
+            role="button"
+            tabindex="0"
+          >
+            {#if Math.hypot(label.x - label.x0, label.y - label.y0) > 6}
+              <line
+                x1={label.x0}
+                y1={label.y0}
+                x2={label.x}
+                y2={label.y}
+                stroke="#000"
+                stroke-opacity="0.5"
+                stroke-width="1"
+                vector-effect="non-scaling-stroke"
+              />
+            {/if}
+            <!-- <circle
             cx={label.x0}
             cy={label.y0}
             r={2}
             fill="#000"
             opacity="0.35"
           /> -->
-          <rect
-            x={label.x - label.width / 2}
-            y={label.y - label.height / 2}
-            width={label.width}
-            height={label.height}
-            fill="black"
-            stroke="black"
-            stroke-width="0"
-            vector-effect="non-scaling-stroke"
-          />
-          <text
-            x={label.x}
-            y={label.y}
-            text-anchor="middle"
-            dominant-baseline="middle"
-            font-size={label.fontSize}
-            font-weight="400"
-            fill="white"
-            class="pointer-events-none select-none"
-            vector-effect="non-scaling-stroke"
-          >
-            {label.text}
-          </text>
-          <title>{label.fanzine} ({label.city})</title>
+            <rect
+              x={label.x - label.width / 2}
+              y={label.y - label.height / 2}
+              width={label.width}
+              height={label.height}
+              fill="black"
+              stroke="black"
+              stroke-width="0"
+              vector-effect="non-scaling-stroke"
+            />
+            <text
+              x={label.x}
+              y={label.y}
+              text-anchor="middle"
+              dominant-baseline="middle"
+              font-size={label.fontSize}
+              font-weight="400"
+              fill="white"
+              class="pointer-events-none select-none"
+              vector-effect="non-scaling-stroke"
+            >
+              {label.text}
+            </text>
+            <title>{label.fanzine} ({label.city})</title>
+          </g>
         </g>
-      </g>
-    {/each}
-  </g>
-</svg>
+      {/each}
+    </g>
+  </svg>
+</section>

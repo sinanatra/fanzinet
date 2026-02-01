@@ -32,7 +32,7 @@
         class=" border border-black px-2 py-1 text-sm text-black"
         on:click={clear}
       >
-        Clear
+        X
       </button>
     {/if}
   </div>
