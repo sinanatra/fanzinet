@@ -116,6 +116,29 @@
   });
 </script>
 
+<svelte:head>
+  <title>Fanzinet - Analogikal Knot Map (1980-1989)</title>
+  <meta name="description" content="Interactive map of Italian fanzines from 1980-1989. Explore the underground punk, DIY, and alternative culture scene." />
+  <meta name="keywords" content="fanzines, Italy, punk, DIY, underground, 1980s, alternative culture, map" />
+  <meta name="author" content="Paolo Palmacci, Giacomo Nanni" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://fanzinet.giacomo.website/" />
+  <meta property="og:title" content="Fanzinet - Analogikal Knot Map" />
+  <meta property="og:description" content="Interactive map and database of Italian fanzines (1980-1989)" />
+  <meta property="og:image" content="http://fanzinet.giacomo.website//cover.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="http://fanzinet.giacomo.website/" />
+  <meta name="twitter:title" content="Fanzinet - Analogikal Knot Map" />
+  <meta name="twitter:description" content="Interactive map and database of Italian fanzines (1980-1989)" />
+  <meta name="twitter:image" content="http://fanzinet.giacomo.website//cover.jpg" />
+</svelte:head>
+
 <Header />
 
 <div class="sticky top-0 z-0 h-[65vh] w-full">
