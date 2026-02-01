@@ -301,20 +301,21 @@
 </script>
 
 <section class="bg-[#ccc]">
-  <div class="absolute top-4 right-4 flex z-50 space-x-2">
-    <button
-      on:click={() => handleZoom(-1)}
-      class="bg-white px-2 py-1 font-bold text-black border disabled:opacity-40"
-      disabled={panZoomDisabled}
-    >
-      −
-    </button>
+  <div class="absolute top-1 right-1 z-50 space-y-1 text-xs">
     <button
       on:click={() => handleZoom(1)}
       class="bg-white px-2 py-1 font-bold text-black border disabled:opacity-40"
       disabled={panZoomDisabled}
     >
       +
+    </button>
+    <br />
+    <button
+      on:click={() => handleZoom(-1)}
+      class="bg-white px-2 py-1 font-bold text-black border disabled:opacity-40"
+      disabled={panZoomDisabled}
+    >
+      −
     </button>
   </div>
 
