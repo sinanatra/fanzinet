@@ -3,10 +3,10 @@
 <script>
   import { onMount } from "svelte";
   import { csvParse } from "d3-dsv";
-  import FanzineHeader from "$lib/FanzineHeader.svelte";
-  import FanzineMap from "$lib/FanzineMap.svelte";
-  import FanzineSearchPanel from "$lib/FanzineSearchPanel.svelte";
-  import FanzineResultsGrid from "$lib/FanzineResultsGrid.svelte";
+  import Header from "$lib/Header.svelte";
+  import Map from "$lib/Map.svelte";
+  import SearchPanel from "$lib/SearchPanel.svelte";
+  import ResultsGrid from "$lib/ResultsGrid.svelte";
 
   function normalizeRow(row) {
     return {
@@ -115,7 +115,7 @@
   });
 </script>
 
-<FanzineHeader />
+<Header />
 
 <div class="sticky top-0 z-0 h-[65vh] w-full">
   <div class="h-full w-full overflow-hidden bg-white">
@@ -124,7 +124,7 @@
       {:else if error}
         <div class="p-4 text-sm">{error}</div>
       {:else} -->
-    <FanzineMap
+    <Map
       {italy}
       {points}
       {labelPlacements}
@@ -143,7 +143,7 @@
 </div>
 
 <div class="relative mx-auto bg-white w-full px-2 py-1">
-  <FanzineSearchPanel
+  <SearchPanel
     bind:query={searchQuery}
     totalCount={allFanzines.length}
     {visibleCount}
@@ -152,7 +152,7 @@
     on:clear={onClearSearch}
   />
 
-  <FanzineResultsGrid
+  <ResultsGrid
     items={selectedCity
       ? [selectedCity]
       : searchQuery
