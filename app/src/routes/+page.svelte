@@ -115,52 +115,50 @@
   });
 </script>
 
-<div class="bg-white">
-  <FanzineHeader />
+<FanzineHeader />
 
-  <div class="sticky top-0 z-0 h-[70vh] w-full">
-    <div class="h-full w-full overflow-hidden bg-white">
-      <!-- {#if loading}
+<div class="sticky top-0 z-0 h-[65vh] w-full">
+  <div class="h-full w-full overflow-hidden bg-white">
+    <!-- {#if loading}
         <div class="p-4 text-">Loading…</div>
       {:else if error}
         <div class="p-4 text-sm">{error}</div>
       {:else} -->
-      <FanzineMap
-        {italy}
-        {points}
-        {labelPlacements}
-        query={searchQuery}
-        projectionZoom={1}
-        filteredItems={selectedCity
-          ? [selectedCity]
-          : searchQuery
-            ? filteredCities
-            : allFanzines}
-        on:select={onMapSelect}
-        on:visibleItemsChange={onVisibleItemsChange}
-      />
-      <!-- {/if} -->
-    </div>
-  </div>
-
-  <div class="relative mx-auto bg-white w-full px-2 py-4">
-    <FanzineSearchPanel
-      bind:query={searchQuery}
-      totalCount={allFanzines.length}
-      {visibleCount}
-      resultsCount={filteredCities.length}
-      hasSelection={!!selectedCity}
-      on:clear={onClearSearch}
-    />
-
-    <FanzineResultsGrid
-      items={selectedCity
+    <FanzineMap
+      {italy}
+      {points}
+      {labelPlacements}
+      query={searchQuery}
+      projectionZoom={1}
+      filteredItems={selectedCity
         ? [selectedCity]
         : searchQuery
           ? filteredCities
-          : viewportItems.length > 0
-            ? viewportItems
-            : allFanzines}
+          : allFanzines}
+      on:select={onMapSelect}
+      on:visibleItemsChange={onVisibleItemsChange}
     />
+    <!-- {/if} -->
   </div>
+</div>
+
+<div class="relative mx-auto bg-white w-full px-2 py-1">
+  <FanzineSearchPanel
+    bind:query={searchQuery}
+    totalCount={allFanzines.length}
+    {visibleCount}
+    resultsCount={filteredCities.length}
+    hasSelection={!!selectedCity}
+    on:clear={onClearSearch}
+  />
+
+  <FanzineResultsGrid
+    items={selectedCity
+      ? [selectedCity]
+      : searchQuery
+        ? filteredCities
+        : viewportItems.length > 0
+          ? viewportItems
+          : allFanzines}
+  />
 </div>

@@ -40,13 +40,13 @@
 
 </script>
 
-<div class="py-2">
+<div class="py-0.5">
   <div class="text-xs leading-tight text-black/70">
      <strong class="text-black">{items.length}</strong> fanzine
   </div>
-  <div class="grid grid-cols-3 md:grid-cols-8  gap-3 p-2" role="list" aria-label="Fanzines">
+  <div class="grid grid-cols-5 md:grid-cols-12  gap-0.5 p-0.5" role="list" aria-label="Fanzines">
     {#each items as item, i (itemKey(item, i))}
-      <div role="listitem" class=" bg-white p-1 text-left shadow-sm">
+      <div role="listitem" class=" bg-white p-0.5 text-left shadow-sm">
         <div class="aspect-[3/4] w-full overflow-hidden  bg-black/5">
           {#if item.ogImage}
             <img
@@ -58,24 +58,24 @@
           {/if}
         </div>
 
-        <div class="mt-1 truncate font-bold leading-tight">
+        <div class="mt-0 mb-0.5 truncate font-bold leading-tight text-[.6rem]">
           {item.fanzine}
         </div>
-        <div class="truncate leading-tight">
+        <div class="truncate leading-tight text-[.6rem]">
           {item.city}{item.country ? `, ${item.country}` : ""}
         </div>
-        <div class="mt-0.5 line-clamp-2 leading-tight">
+        <div class="mt-0 line-clamp-2 leading-tight text-[.6rem]">
           {item.genre || "—"}{yearsLabel(item) ? ` · ${yearsLabel(item)}` : ""}
         </div>
 
         {#if item.description}
-          <div class="mt-2 text-xs leading-snug text-black/60">
+          <div class="mt-0.5 text-[.6rem] leading-snug text-black/60">
             <div class={expandedIndex === i ? "" : "line-clamp-3"}>
               {item.description}
             </div>
             <button
               type="button"
-              class="mt-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+              class="mt-0.5 text-[.6rem] font-medium text-blue-600 hover:text-blue-800"
               on:click={() => {
                 expandedIndex = expandedIndex === i ? null : i;
               }}
@@ -85,10 +85,10 @@
           </div>
         {/if}
 
-        <div class="mt-2 gap-2 ">
+        <div class="mt-0.5 gap-0.5 ">
           {#if item?.pdfHref}
             <a
-              class=" bg-black/5 px-2 py-1 hover:bg-black/10"
+              class=" bg-black/5 px-0.5 py-0 text-[.6rem] hover:bg-black/10"
               href={toAbsoluteUrl(item.pdfHref)}
               target="_blank"
               rel="noreferrer"
@@ -98,7 +98,7 @@
           {/if}
           {#if item?.canonicalUrl}
             <a
-              class=" bg-black/5 px-2 py-1 text-black hover:bg-black/10"
+              class=" bg-black/5 px-0.5 py-0 text-[.6rem] text-black hover:bg-black/10"
               href={item.canonicalUrl}
               target="_blank"
               rel="noreferrer"

@@ -17,19 +17,19 @@
   }
 </script>
 
-<div class="grid w-full max-w-[520px]">
-  <div class="flex items-center gap-2">
+<div class="grid w-full max-w-[280px]">
+  <div class="flex items-center gap-0.5">
     <input
       type="text"
-      placeholder="Search..."
+      placeholder="Cerca..."
       bind:value={query}
-      class="flex-1 border border-black bg-white px-2 py-1 text-sm text-black outline-none"
+      class="flex-1 border border-black bg-white px-1 py-0.5 text-xs text-black outline-none"
       aria-label="Search fanzines"
     />
     {#if query || hasSelection}
       <button
         type="button"
-        class=" border border-black px-2 py-1 text-sm text-black"
+        class=" border border-black px-1 py-0.5 text-xs text-black"
         on:click={clear}
       >
         X
