@@ -1,11 +1,9 @@
-<svelte:options runes={false} />
-
 <script>
-  export let items = [];
+  const { items = [] } = $props();
 
   const baseUrl = "https://www.paolopalmacci.it/capitmundi/";
 
-  let expandedIndex = null;
+  let expandedIndex = $state(null);
 
   function toAbsoluteUrl(maybeRelative) {
     if (!maybeRelative) return "";

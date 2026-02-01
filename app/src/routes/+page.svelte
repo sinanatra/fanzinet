@@ -1,7 +1,4 @@
-<svelte:options runes={false} />
-
 <script>
-  import { onMount } from "svelte";
   import { csvParse } from "d3-dsv";
   import Header from "$lib/Header.svelte";
   import Footer from "$lib/Footer.svelte";
@@ -29,53 +26,57 @@
     };
   }
 
-  let italy = null;
-  let allFanzines = [];
-  let points = [];
-  let labelPlacements = [];
-  let loading = true;
-  let error = "";
+  let italy = $state(null);
+  let allFanzines = $state([]);
+  let points = $state([]);
+  let labelPlacements = $state([]);
+  let loading = $state(true);
+  let error = $state("");
 
-  let searchQuery = "";
-  let selectedCity = null;
-  let viewportItems = [];
+  let searchQuery = $state("");
+  let selectedCity = $state(null);
+  let viewportItems = $state([]);
 
-  $: filteredCities = searchQuery
-    ? allFanzines.filter((f) => {
-        const q = searchQuery.toLowerCase();
-        return (
-          f.fanzine?.toLowerCase().includes(q) ||
-          f.city?.toLowerCase().includes(q) ||
-          f.genre?.toLowerCase().includes(q)
-        );
-      })
-    : [];
+  let filteredCities = $derived(
+    searchQuery
+      ? allFanzines.filter((f) => {
+          const q = searchQuery.toLowerCase();
+          return (
+            f.fanzine?.toLowerCase().includes(q) ||
+            f.city?.toLowerCase().includes(q) ||
+            f.genre?.toLowerCase().includes(q)
+          );
+        })
+      : []
+  );
 
-  $: visibleCount = searchQuery
-    ? points.filter((p) => {
-        const q = searchQuery.toLowerCase();
-        return (
-          p.fanzine?.toLowerCase().includes(q) ||
-          p.city?.toLowerCase().includes(q) ||
-          p.genre?.toLowerCase().includes(q)
-        );
-      }).length
-    : points.length;
+  let visibleCount = $derived(
+    searchQuery
+      ? points.filter((p) => {
+          const q = searchQuery.toLowerCase();
+          return (
+            p.fanzine?.toLowerCase().includes(q) ||
+            p.city?.toLowerCase().includes(q) ||
+            p.genre?.toLowerCase().includes(q)
+          );
+        }).length
+      : points.length
+  );
 
   function onClearSearch() {
     searchQuery = "";
     selectedCity = null;
   }
 
-  function onMapSelect(event) {
-    selectedCity = event.detail;
+  function onMapSelect(label) {
+    selectedCity = label;
   }
 
-  function onVisibleItemsChange(event) {
-    viewportItems = event.detail;
+  function onVisibleItemsChange(items) {
+    viewportItems = items;
   }
 
-  onMount(async () => {
+  $effect.pre(async () => {
     try {
       loading = true;
 
@@ -137,8 +138,8 @@
         : searchQuery
           ? filteredCities
           : allFanzines}
-      on:select={onMapSelect}
-      on:visibleItemsChange={onVisibleItemsChange}
+      onSelect={onMapSelect}
+      onvisibleItemsChange={onVisibleItemsChange}
     />
     <!-- {/if} -->
   </div>
@@ -151,7 +152,7 @@
     {visibleCount}
     resultsCount={filteredCities.length}
     hasSelection={!!selectedCity}
-    on:clear={onClearSearch}
+    onclear={onClearSearch}
   />
 
   <ResultsGrid

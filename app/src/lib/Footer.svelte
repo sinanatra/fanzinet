@@ -1,8 +1,10 @@
 <script>
-  export let author = "Paolo Palmacci";
-  export let authorUrl = "https://www.paolopalmacci.it/";
-  export let developer = "Giacomo Nanni";
-  export let developerUrl = "https://giacomo.website/";
+  const {
+    author = "Paolo Palmacci",
+    authorUrl = "https://www.paolopalmacci.it/",
+    developer = "Giacomo Nanni",
+    developerUrl = "https://giacomo.website/"
+  } = $props();
 </script>
 
 <footer class="bg-black border-t text-xs text-white/70 px-2 py-1">

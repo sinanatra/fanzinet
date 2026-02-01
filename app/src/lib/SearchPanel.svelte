@@ -1,19 +1,9 @@
-<svelte:options runes={false} />
-
 <script>
-  import { createEventDispatcher } from "svelte";
-
-  export let query = "";
-  export let totalCount = 0;
-  export let visibleCount = 0;
-  export let resultsCount = 0;
-  export let hasSelection = false;
-
-  const dispatch = createEventDispatcher();
+  let { query = $bindable(""), totalCount = 0, visibleCount = 0, resultsCount = 0, hasSelection = false, onclear } = $props();
 
   function clear() {
     query = "";
-    dispatch("clear");
+    onclear?.();
   }
 </script>
 

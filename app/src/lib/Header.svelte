@@ -1,7 +1,5 @@
 <script>
-  export let title = "fanzinet";
-  export let subtitle = "analogikal knot map";
-  export let version = "0.?";
+  const { title = "fanzinet", subtitle = "analogikal knot map", version = "0.?" } = $props();
 </script>
 
 <header class="bg-black border-b text-xs">

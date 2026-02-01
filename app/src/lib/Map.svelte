@@ -1,49 +1,47 @@
-<svelte:options runes={false} />
-
 <script>
-  import { createEventDispatcher } from "svelte";
   import { geoConicConformal, geoPath } from "d3-geo";
 
-  export let italy = null;
-  export let points = [];
-  export let filteredItems = [];
-  export let query = "";
-  export let projectionZoom = 1.25;
-  export let labelPlacements = null;
-  export let disablePanZoomOnMobile = true;
-  export let disableVisibleItems = true;
-  export let onSelect = null;
-
-  const dispatch = createEventDispatcher();
+  const {
+    italy = null,
+    points = [],
+    filteredItems = [],
+    query = "",
+    projectionZoom = 1.25,
+    labelPlacements = null,
+    disablePanZoomOnMobile = true,
+    disableVisibleItems = true,
+    onSelect = null,
+    onvisibleItemsChange
+  } = $props();
 
   const mapWidth = 1500;
   const mapHeight = 1800;
 
-  let projection = null;
-  let italyPath = "";
-  let italyBounds = null;
+  let projection = $state(null);
+  let italyPath = $state("");
+  let italyBounds = $state(null);
 
-  let plotted = [];
-  let filteredPlotted = [];
-  let visibleItems = [];
+  let plotted = $state([]);
+  let filteredPlotted = $state([]);
+  let visibleItems = $state([]);
 
   const baseTranslateX = 0;
   const baseTranslateY = 0;
 
-  let viewScale = 1;
-  let viewTranslateX = baseTranslateX;
-  let viewTranslateY = baseTranslateY;
-  let panning = false;
-  let panStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
-  let panMoved = false;
-  let suppressClick = false;
-  let isDragging = false;
-  let downOnLabel = false;
-  let pendingPan = false;
-  let activePointerId = null;
-  let rafId = null;
-  let pendingView = null;
-  let panZoomDisabled = false;
+  let viewScale = $state(1);
+  let viewTranslateX = $state(baseTranslateX);
+  let viewTranslateY = $state(baseTranslateY);
+  let panning = $state(false);
+  let panStart = $state({ x: 0, y: 0, translateX: 0, translateY: 0 });
+  let panMoved = $state(false);
+  let suppressClick = $state(false);
+  let isDragging = $state(false);
+  let downOnLabel = $state(false);
+  let pendingPan = $state(false);
+  let activePointerId = $state(null);
+  let rafId = $state(null);
+  let pendingView = $state(null);
+  let panZoomDisabled = $state(false);
 
   function svgPointFromEvent(e) {
     const svg = e.currentTarget?.ownerSVGElement || e.currentTarget;
@@ -127,7 +125,7 @@
       );
     });
 
-    dispatch("visibleItemsChange", visibleItems);
+    onvisibleItemsChange?.(visibleItems);
   }
 
   function onWheel(e) {
@@ -226,38 +224,42 @@
   function handleKeydown(e, label) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      dispatch("select", label);
+      onSelect?.(label);
     }
   }
 
-  $: if (italy) {
-    const p = geoConicConformal().parallels([37, 45]);
-    p.fitExtent(
-      [
-        [0, 0],
-        [mapWidth, mapHeight],
-      ],
-      italy,
-    );
-    applyProjectionZoom(p, projectionZoom);
-    projection = p;
-    italyPath = geoPath(p)(italy) || "";
-    const b = geoPath(p).bounds(italy);
-    italyBounds = b
-      ? {
-          left: b[0][0],
-          top: b[0][1],
-          right: b[1][0],
-          bottom: b[1][1],
-        }
-      : null;
-  }
+  $effect(() => {
+    if (italy) {
+      const p = geoConicConformal().parallels([37, 45]);
+      p.fitExtent(
+        [
+          [0, 0],
+          [mapWidth, mapHeight],
+        ],
+        italy,
+      );
+      applyProjectionZoom(p, projectionZoom);
+      projection = p;
+      italyPath = geoPath(p)(italy) || "";
+      const b = geoPath(p).bounds(italy);
+      italyBounds = b
+        ? {
+            left: b[0][0],
+            top: b[0][1],
+            right: b[1][0],
+            bottom: b[1][1],
+          }
+        : null;
+    }
+  });
 
-  $: if (labelPlacements && labelPlacements.length) {
-    plotted = labelPlacements;
-  }
+  $effect(() => {
+    if (labelPlacements && labelPlacements.length) {
+      plotted = labelPlacements;
+    }
+  });
 
-  $: {
+  $effect(() => {
     const base = plotted || [];
     const filtered = !query
       ? base
@@ -281,23 +283,28 @@
         screenY < mapHeight + padding
       );
     });
-  }
+  });
 
-  $: {
-    if (disableVisibleItems) {
-      visibleItems = [];
-      dispatch("visibleItemsChange", visibleItems);
+  $effect(() => {
+    if (!disableVisibleItems) {
+      calculateVisibleItems();
     } else {
-      viewScale, viewTranslateX, viewTranslateY, calculateVisibleItems();
+      visibleItems = [];
     }
-  }
+  });
 
-  $: if (typeof window !== "undefined") {
-    const coarse =
-      window.matchMedia?.("(pointer: coarse)")?.matches ||
-      window.matchMedia?.("(hover: none)")?.matches;
-    panZoomDisabled = Boolean(disablePanZoomOnMobile && coarse);
-  }
+  $effect(() => {
+    onvisibleItemsChange?.(visibleItems);
+  });
+
+  $effect(() => {
+    if (typeof window !== "undefined") {
+      const coarse =
+        window.matchMedia?.("(pointer: coarse)")?.matches ||
+        window.matchMedia?.("(hover: none)")?.matches;
+      panZoomDisabled = Boolean(disablePanZoomOnMobile && coarse);
+    }
+  });
 </script>
 
 <section class="bg-[#ccc]">
@@ -353,13 +360,11 @@
               endPan();
               if (!suppressClick && !isDragging && !panZoomDisabled) {
                 onSelect?.(label);
-                dispatch("select", label);
               }
             }}
             on:click={() => {
               if (!suppressClick && !isDragging && !panZoomDisabled) {
                 onSelect?.(label);
-                dispatch("select", label);
               }
             }}
             on:keydown={(e) => handleKeydown(e, label)}
