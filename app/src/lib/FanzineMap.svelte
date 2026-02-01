@@ -70,7 +70,7 @@
     zoomCenterY = mapHeight / 2,
   ) {
     if (panZoomDisabled) return;
-    const factor = direction > 0 ? 1.1 : 1 / 1.1;
+    const factor = direction > 0 ? 1.05 : 1 / 1.05;
     const nextScale = Math.max(0.5, Math.min(8, viewScale * factor));
     if (nextScale === viewScale) return;
 
