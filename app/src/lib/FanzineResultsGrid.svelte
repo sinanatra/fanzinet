@@ -103,7 +103,7 @@
               target="_blank"
               rel="noreferrer"
             >
-              Page
+              Link
             </a>
           {/if}
         </div>
