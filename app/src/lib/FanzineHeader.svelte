@@ -9,14 +9,28 @@
   export let developerUrl = "https://giacomo.website/";
 </script>
 
-<header class="bg-black border-b">
-  <div class="mx-auto px-4 py-2">
+<header class="bg-black border-b text-xs">
+  <div class="mx-auto p-1">
     <div class="flex items-center justify-between gap-4">
-      <div class="text-xs font-mono text-white">
-        {title} {subtitle} v.{version} {years}
+      <div class="  text-white">
+        {title}
+        {subtitle} v.{version}
+        {years}
       </div>
-      <div class="text-[10px] font-mono text-white/70 whitespace-nowrap">
-        autore: <a href={authorUrl} target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800">{author}</a> · sviluppo: <a href={developerUrl} target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800">{developer}</a>
+      <div class=" text-white/70 whitespace-nowrap">
+        autore: <a
+          href={authorUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-blue-600 hover:text-blue-800">{author}</a
+        >
+        · sviluppo:
+        <a
+          href={developerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-blue-600 hover:text-blue-800">{developer}</a
+        >
       </div>
     </div>
   </div>

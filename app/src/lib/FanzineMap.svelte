@@ -515,7 +515,7 @@
                 x2={label.x}
                 y2={label.y}
                 stroke="#000"
-                stroke-opacity="0.5"
+                stroke-opacity="0.2"
                 stroke-width="1"
                 vector-effect="non-scaling-stroke"
               />
