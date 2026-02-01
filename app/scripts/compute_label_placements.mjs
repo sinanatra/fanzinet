@@ -16,9 +16,9 @@ const defaultOut = path.resolve(
 
 const mapWidth = 1500;
 const mapHeight = 1800;
-const labelPad = 1;
-const labelGap = 1;
-const minFontSize = 2;
+const labelPad = 0.5;
+const labelGap = 0.2;
+const minFontSize = 1;
 const maxFontSize = 6;
 const maxLabelDrift = 100;
 const projectionZoom = 1;
@@ -200,6 +200,18 @@ function placeLabels(fanzines, projection, boundsOverride) {
     return { x, y };
   }
 
+  function forcePlace(w, h, cx, cy) {
+    const rect = {
+      left: cx - w / 2 - labelGap,
+      right: cx + w / 2 + labelGap,
+      top: cy - h / 2 - labelGap,
+      bottom: cy + h / 2 + labelGap,
+    };
+    const id = placedRects.length;
+    placedRects.push(rect);
+    index.insert(id, rect);
+  }
+
   function* candidateCenters(anchorX, anchorY, step, maxRadius) {
     yield { x: anchorX, y: anchorY };
     for (let r = step; r <= maxRadius; r += step) {
@@ -249,6 +261,7 @@ function placeLabels(fanzines, projection, boundsOverride) {
       finalFontSize = minFontSize;
       finalWidth = w;
       finalHeight = h;
+      forcePlace(w, h, best.x, best.y);
     }
 
     placed.push({
