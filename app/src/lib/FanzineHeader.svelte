@@ -18,18 +18,18 @@
         {years}
       </div>
       <div class=" text-white/70 whitespace-nowrap">
-        autore: <a
+        <a
           href={authorUrl}
           target="_blank"
           rel="noopener noreferrer"
-          class="text-blue-600 hover:text-blue-800">{author}</a
+          class="text-blue-600 hover:text-blue-800">↗</a
         >
-        · sviluppo:
+        ·
         <a
           href={developerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          class="text-blue-600 hover:text-blue-800">{developer}</a
+          class="text-blue-600 hover:text-blue-800">↗</a
         >
       </div>
     </div>
