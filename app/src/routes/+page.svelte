@@ -1,0 +1,139 @@
+<svelte:options runes={false} />
+
+<script>
+  import { onMount } from "svelte";
+  import { csvParse } from "d3-dsv";
+  import FanzineMap from "$lib/FanzineMap.svelte";
+  import FanzineSearchPanel from "$lib/FanzineSearchPanel.svelte";
+  import FanzineResultsGrid from "$lib/FanzineResultsGrid.svelte";
+
+  function normalizeRow(row) {
+    return {
+      sourceFile: row.source_file,
+      canonicalUrl: row.canonical_url,
+      title: row.title,
+      fanzine: row.fanzine || "N/A",
+      city: row.city || "Unknown",
+      country: row.country,
+      activity: row.activity,
+      yearStart: row.year_start,
+      yearEnd: row.year_end,
+      genre: row.genre,
+      pdfHref: row.pdf_href,
+      ogImage: row.og_image,
+      latitude: row.latitude,
+      longitude: row.longitude,
+    };
+  }
+
+  let italy = null;
+  let allFanzines = [];
+  let points = [];
+  let loading = true;
+  let error = "";
+
+  let searchQuery = "";
+  let selectedCity = null;
+
+  $: filteredCities = searchQuery
+    ? allFanzines.filter((f) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          f.fanzine?.toLowerCase().includes(q) ||
+          f.city?.toLowerCase().includes(q) ||
+          f.genre?.toLowerCase().includes(q)
+        );
+      })
+    : [];
+
+  $: visibleCount = searchQuery
+    ? points.filter((p) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          p.fanzine?.toLowerCase().includes(q) ||
+          p.city?.toLowerCase().includes(q) ||
+          p.genre?.toLowerCase().includes(q)
+        );
+      }).length
+    : points.length;
+
+  function onClearSearch() {
+    searchQuery = "";
+    selectedCity = null;
+  }
+
+  function onMapSelect(event) {
+    selectedCity = event.detail;
+  }
+
+  onMount(async () => {
+    try {
+      loading = true;
+
+      const geoRes = await fetch("/data/italy.geo.json");
+      if (!geoRes.ok) throw new Error("Failed to load italy.geo.json");
+      italy = await geoRes.json();
+
+      const csvRes = await fetch("/fanzines.csv");
+      if (!csvRes.ok) throw new Error("Failed to load fanzines.csv");
+      const text = await csvRes.text();
+      allFanzines = csvParse(text).map(normalizeRow);
+
+      points = allFanzines
+        .map((f) => {
+          const lat = parseFloat(f.latitude);
+          const lon = parseFloat(f.longitude);
+          if (!isFinite(lat) || !isFinite(lon)) return null;
+          return { ...f, lat, lon };
+        })
+        .filter(Boolean);
+    } catch (e) {
+      error = e instanceof Error ? e.message : String(e);
+    } finally {
+      loading = false;
+      // setTimeout(() => {
+      //   window.scrollTo(0, window.innerHeight * 0.3);
+      // }, 0);
+    }
+  });
+</script>
+
+<div class="bg-white">
+  <div class="sticky top-0 z-0 h-[80vh] w-full">
+    <div class="h-full w-full overflow-hidden bg-white">
+      {#if loading}
+        <div class="p-4 text-">Loading…</div>
+      {:else if error}
+        <div class="p-4 text-sm">{error}</div>
+      {:else}
+        <FanzineMap
+          {italy}
+          {points}
+          query={searchQuery}
+          projectionZoom={1}
+          filteredItems={selectedCity ? [selectedCity] : (searchQuery ? filteredCities : allFanzines)}
+          on:select={onMapSelect}
+        />
+      {/if}
+    </div>
+  </div>
+
+  <div class="relative mx-auto bg-white w-full px-2 py-4">
+    <FanzineSearchPanel
+      bind:query={searchQuery}
+      totalCount={allFanzines.length}
+      {visibleCount}
+      resultsCount={filteredCities.length}
+      hasSelection={!!selectedCity}
+      on:clear={onClearSearch}
+    />
+
+    <FanzineResultsGrid
+      items={selectedCity
+        ? [selectedCity]
+        : searchQuery
+          ? filteredCities
+          : allFanzines}
+    />
+  </div>
+</div>
