@@ -87,12 +87,12 @@
             </div>
             <button
               type="button"
-              class="mt-0.5 text-[.6rem] font-medium text-blue-600 hover:text-blue-800"
+              class="mt-0.5 cursor-pointer text-[.6rem] font-medium text-blue-600 hover:text-blue-800"
               on:click={() => {
                 expandedIndex = expandedIndex === i ? null : i;
               }}
             >
-              {expandedIndex === i ? "Read less" : "Read more"}
+              {expandedIndex === i ? "chiudi" : "leggi tutto"}
             </button>
           </div>
         {/if}
