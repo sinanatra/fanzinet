@@ -37,7 +37,7 @@
   }
 </script>
 
-<div class="h-screen">
+<div class="min-h-screen">
 
   <div
     class="grid grid-cols-2 md:grid-cols-8 gap-0.5 p-0.5"
