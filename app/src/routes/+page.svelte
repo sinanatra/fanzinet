@@ -119,8 +119,9 @@
 
 <Header />
 
-<div class="sticky top-0 z-0 max-h-[65vh] w-full">
-  <div class="h-full w-full overflow-hidden bg-white">
+<div class="flex min-h-screen flex-col">
+  <div class="relative z-0 h-[65vh] w-full">
+    <div class="h-full w-full overflow-hidden bg-white">
     <!-- {#if loading}
         <div class="p-4 text-">Loading…</div>
       {:else if error}
@@ -142,28 +143,29 @@
       onvisibleItemsChange={onVisibleItemsChange}
     />
     <!-- {/if} -->
+    </div>
   </div>
-</div>
 
-<div class="relative mx-auto bg-white w-full px-2 py-1">
-  <SearchPanel
-    bind:query={searchQuery}
-    totalCount={allFanzines.length}
-    {visibleCount}
-    resultsCount={filteredCities.length}
-    hasSelection={!!selectedCity}
-    onclear={onClearSearch}
-  />
+  <div class="relative mx-auto w-full flex-1 bg-white px-2 py-1">
+    <SearchPanel
+      bind:query={searchQuery}
+      totalCount={allFanzines.length}
+      {visibleCount}
+      resultsCount={filteredCities.length}
+      hasSelection={!!selectedCity}
+      onclear={onClearSearch}
+    />
 
-  <ResultsGrid
-    items={selectedCity
-      ? [selectedCity]
-      : searchQuery
-        ? filteredCities
-        : viewportItems.length > 0
-          ? viewportItems
-          : allFanzines}
-  />
+    <ResultsGrid
+      items={selectedCity
+        ? [selectedCity]
+        : searchQuery
+          ? filteredCities
+          : viewportItems.length > 0
+            ? viewportItems
+            : allFanzines}
+    />
+  </div>
 </div>
 
 <Footer />
