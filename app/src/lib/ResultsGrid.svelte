@@ -5,6 +5,14 @@
 
   let expandedIndex = $state(null);
 
+  let sortedItems = $derived.by(() => {
+    const withImages = items.filter((item) => item.ogImage).sort((a, b) =>
+      (a.fanzine || "").localeCompare(b.fanzine || "")
+    );
+    const withoutImages = items.filter((item) => !item.ogImage);
+    return [...withImages, ...withoutImages];
+  });
+
   function toAbsoluteUrl(maybeRelative) {
     if (!maybeRelative) return "";
     if (/^https?:\/\//i.test(maybeRelative)) return maybeRelative;
@@ -38,13 +46,18 @@
 </script>
 
 <div class="min-h-screen">
+  <div class="flex items-center justify-between px-0.5 py-2 text-xs">
+    <div class="text-black/70">
+      <strong class="text-black">{sortedItems.length}</strong> fanzine
+    </div>
+  </div>
 
   <div
     class="grid grid-cols-2 md:grid-cols-8 gap-0.5 p-0.5"
     role="list"
     aria-label="Fanzines"
   >
-    {#each items as item, i (itemKey(item, i))}
+    {#each sortedItems as item, i (itemKey(item, i))}
       <div role="listitem" class=" bg-white p-0.5 text-left shadow-sm">
         <div class="aspect-[3/4] w-full overflow-hidden bg-black/5">
           {#if item.ogImage}
