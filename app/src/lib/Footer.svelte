@@ -7,23 +7,10 @@
   } = $props();
 </script>
 
-<footer class="bg-black min-h-[200px] border-t text-base text-white/70 px-2 py-1">
-  <div class="mb-4">
-    <a
-      href={authorUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="text-blue-600 hover:text-blue-800">{author}</a
-    >
-    ·
-    <a
-      href={developerUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="text-blue-600 hover:text-blue-800">{developer}</a
-    >
-  </div>
-  <div class="text-white text-xs max-w-[800px]">
+<footer
+  class="bg-black min-h-[200px] border-t text-xs text-white px-2 py-1"
+>
+  <div class="text-white max-w-[800px] mb-5">
     <p class="mb-2">
       Questa è una mappatura della Rete delle Fanzine italiane originate dalla
       subcultura punk/nuovo rock negli anni ’80. Nell’Era del Telefono Fisso e
@@ -49,5 +36,20 @@
       qualsivoglia diritto può farlo sapere: il contenuto sarà immediatamente
       rimosso.
     </p>
+  </div>
+  <div class="mb-4">
+    <a
+      href={authorUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-white hover:text-blue-800">{author}</a
+    >
+    ·
+    <a
+      href={developerUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-white hover:text-blue-800">{developer}</a
+    >
   </div>
 </footer>
