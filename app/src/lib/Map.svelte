@@ -10,6 +10,7 @@
     labelPlacements = null,
     disablePanZoomOnMobile = false,
     disableVisibleItems = true,
+    selectedLabel = null,
     onSelect = null,
     onvisibleItemsChange
   } = $props();
@@ -143,8 +144,6 @@
   function onPointerDown(e) {
     if (panZoomDisabled) return;
     if (e.button != null && e.button !== 0) return;
-    const svg = e.currentTarget;
-    svg.setPointerCapture?.(e.pointerId);
     downOnLabel = isLabelHitEvent(e);
     panning = false;
     pendingPan = true;
@@ -287,6 +286,18 @@
     }
   }
 
+  function labelMatches(a, b) {
+    if (!a || !b) return false;
+    if (a.canonicalUrl && b.canonicalUrl) return a.canonicalUrl === b.canonicalUrl;
+    if (a.sourceFile && b.sourceFile) return a.sourceFile === b.sourceFile;
+    return (
+      a.fanzine === b.fanzine &&
+      a.city === b.city &&
+      a.yearStart === b.yearStart &&
+      a.yearEnd === b.yearEnd
+    );
+  }
+
   $effect(() => {
     if (italy) {
       const p = geoConicConformal().parallels([37, 45]);
@@ -412,19 +423,19 @@
       {/if}
 
       {#each filteredPlotted as label, i (i)}
-        <g class="transition-opacity duration-200">
+        {@const isSelected = labelMatches(label, selectedLabel)}
+        <g
+          style={`opacity: ${
+            selectedLabel ? (isSelected ? "1" : "0.35") : "1"
+          }`}
+        >
           <g
             data-label-hit
             class="cursor-pointer"
-            on:pointerup|stopPropagation={() => {
-              endPan();
+            on:pointerup|stopPropagation={(e) => {
+              endPan(e);
               if (!suppressClick && !isDragging && !panZoomDisabled) {
-                onSelect?.(label);
-              }
-            }}
-            on:click={() => {
-              if (!suppressClick && !isDragging && !panZoomDisabled) {
-                onSelect?.(label);
+                onSelect?.(isSelected ? null : label);
               }
             }}
             on:keydown={(e) => handleKeydown(e, label)}
@@ -455,7 +466,6 @@
               y={label.y - label.height / 2}
               width={label.width}
               height={label.height}
-              fill="black"
               stroke="black"
               stroke-width="0"
               vector-effect="non-scaling-stroke"
@@ -466,7 +476,7 @@
               text-anchor="middle"
               dominant-baseline="middle"
               font-size={label.fontSize}
-              font-weight="400"
+              font-weight={isSelected ? "600" : "400"}
               fill="white"
               class="pointer-events-none select-none"
               vector-effect="non-scaling-stroke"

@@ -132,6 +132,7 @@
       {labelPlacements}
       query={searchQuery}
       projectionZoom={1}
+      selectedLabel={selectedCity}
       filteredItems={selectedCity
         ? [selectedCity]
         : searchQuery
