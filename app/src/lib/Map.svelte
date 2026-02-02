@@ -8,7 +8,7 @@
     query = "",
     projectionZoom = 1.25,
     labelPlacements = null,
-    disablePanZoomOnMobile = true,
+    disablePanZoomOnMobile = false,
     disableVisibleItems = true,
     onSelect = null,
     onvisibleItemsChange
@@ -42,6 +42,9 @@
   let rafId = $state(null);
   let pendingView = $state(null);
   let panZoomDisabled = $state(false);
+  let activePointers = $state(new Map());
+  let pinchActive = $state(false);
+  let pinchStart = $state(null);
 
   function svgPointFromEvent(e) {
     const svg = e.currentTarget?.ownerSVGElement || e.currentTarget;
@@ -68,7 +71,8 @@
     zoomCenterY = mapHeight / 2,
   ) {
     if (panZoomDisabled) return;
-    const factor = direction > 0 ? 1.02 : 1 / 1.02;
+    const step = 1.3;
+    const factor = direction > 0 ? step : 1 / step;
     const nextScale = Math.max(0.5, Math.min(8, viewScale * factor));
     if (nextScale === viewScale) return;
 
@@ -139,6 +143,8 @@
   function onPointerDown(e) {
     if (panZoomDisabled) return;
     if (e.button != null && e.button !== 0) return;
+    const svg = e.currentTarget;
+    svg.setPointerCapture?.(e.pointerId);
     downOnLabel = isLabelHitEvent(e);
     panning = false;
     pendingPan = true;
@@ -146,6 +152,27 @@
     panMoved = false;
     isDragging = false;
     const m = svgPointFromEvent(e);
+    activePointers.set(e.pointerId, m);
+
+    if (activePointers.size === 2) {
+      const pts = Array.from(activePointers.values());
+      const dx = pts[1].x - pts[0].x;
+      const dy = pts[1].y - pts[0].y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const center = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+      pinchActive = true;
+      pinchStart = {
+        distance,
+        center,
+        scale: viewScale,
+        translateX: viewTranslateX,
+        translateY: viewTranslateY,
+      };
+      pendingPan = false;
+      panning = false;
+      return;
+    }
+
     panStart = {
       x: m.x,
       y: m.y,
@@ -156,12 +183,39 @@
 
   function onPointerMove(e) {
     if (panZoomDisabled) return;
+    if (activePointers.has(e.pointerId)) {
+      activePointers.set(e.pointerId, svgPointFromEvent(e));
+    }
+
+    if (pinchActive && activePointers.size >= 2 && pinchStart) {
+      const pts = Array.from(activePointers.values());
+      const dx = pts[1].x - pts[0].x;
+      const dy = pts[1].y - pts[0].y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const ratio = distance / pinchStart.distance;
+      const nextScale = Math.max(0.5, Math.min(8, pinchStart.scale * ratio));
+      const center = {
+        x: (pts[0].x + pts[1].x) / 2,
+        y: (pts[0].y + pts[1].y) / 2,
+      };
+      const zoomCenterX = center.x;
+      const zoomCenterY = center.y;
+      const nextTranslateX =
+        zoomCenterX -
+        ((zoomCenterX - pinchStart.translateX) / pinchStart.scale) * nextScale;
+      const nextTranslateY =
+        zoomCenterY -
+        ((zoomCenterY - pinchStart.translateY) / pinchStart.scale) * nextScale;
+      scheduleViewUpdate(nextTranslateX, nextTranslateY, nextScale);
+      return;
+    }
+
     if (!pendingPan && !panning) return;
     if (activePointerId != null && e.pointerId !== activePointerId) return;
     const m = svgPointFromEvent(e);
     const dx = m.x - panStart.x;
     const dy = m.y - panStart.y;
-    if (!panMoved && Math.hypot(dx, dy) > 3) {
+    if (!panMoved && Math.hypot(dx, dy) > 2) {
       panMoved = true;
       isDragging = true;
       suppressClick = downOnLabel;
@@ -170,11 +224,9 @@
       e.currentTarget.setPointerCapture?.(e.pointerId);
     }
     if (panMoved) {
-      scheduleViewUpdate(
-        panStart.translateX + dx,
-        panStart.translateY + dy,
-        viewScale,
-      );
+      // Apply panning immediately to reduce perceived lag on mobile.
+      viewTranslateX = panStart.translateX + dx;
+      viewTranslateY = panStart.translateY + dy;
     }
   }
 
@@ -189,6 +241,13 @@
   }
 
   function endPan(e, cancelled = false) {
+    if (activePointers.has(e?.pointerId)) {
+      activePointers.delete(e.pointerId);
+    }
+    if (activePointers.size < 2) {
+      pinchActive = false;
+      pinchStart = null;
+    }
     panning = false;
     pendingPan = false;
     activePointerId = null;
@@ -311,16 +370,16 @@
   
   <div class="absolute top-1 right-1 z-50 space-y-1 text-xs">
     <button
-      on:click={() => handleZoom(1)}
-      class="bg-white px-2 py-1 font-bold text-black border disabled:opacity-40"
+      on:click={() => handleZoom(2)}
+      class="bg-white px-2 py-1  cursor-pointer font-bold text-black border disabled:opacity-40"
       disabled={panZoomDisabled}
     >
       +
     </button>
     <br />
     <button
-      on:click={() => handleZoom(-1)}
-      class="bg-white px-2 py-1 font-bold text-black border disabled:opacity-40"
+      on:click={() => handleZoom(-2)}
+      class="bg-white px-2 py-1  cursor-pointer font-bold text-black border disabled:opacity-40"
       disabled={panZoomDisabled}
     >
       −
