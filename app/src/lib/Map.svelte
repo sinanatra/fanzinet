@@ -79,7 +79,10 @@
     const currentScale = pendingView ? pendingView.scale : viewScale;
     const currentTranslateX = pendingView ? pendingView.x : viewTranslateX;
     const currentTranslateY = pendingView ? pendingView.y : viewTranslateY;
-    const nextScale = Math.max(0.5, Math.min(8, currentScale * factor));
+    const nextScale = Math.max(
+      initialViewScale,
+      Math.min(8, currentScale * factor),
+    );
     if (nextScale === currentScale) return;
 
     const nextTranslateX =
@@ -345,7 +348,10 @@
     const fitFraction = 0.8;
     const scaleX = (mapWidth * fitFraction) / bboxWidth;
     const scaleY = (mapHeight * fitFraction) / bboxHeight;
-    const nextScale = Math.max(0.5, Math.min(8, Math.min(scaleX, scaleY)));
+    const nextScale = Math.max(
+      initialViewScale,
+      Math.min(8, Math.min(scaleX, scaleY)),
+    );
 
     const nextTranslateX = mapWidth / 2 - centerX * nextScale;
     const nextTranslateY = mapHeight / 2 - centerY * nextScale;
