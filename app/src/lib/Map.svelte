@@ -29,9 +29,13 @@
   const baseTranslateX = 0;
   const baseTranslateY = 0;
 
-  let viewScale = $state(1.3);
-  let viewTranslateX = $state(-214.46342976888013);
-  let viewTranslateY = $state(-2.5114542643229925);
+  const initialViewScale = 1.3;
+  const initialViewTranslateX = -214.46342976888013;
+  const initialViewTranslateY = -2.5114542643229925;
+
+  let viewScale = $state(initialViewScale);
+  let viewTranslateX = $state(initialViewTranslateX);
+  let viewTranslateY = $state(initialViewTranslateY);
   let panning = $state(false);
   let panStart = $state({ x: 0, y: 0, translateX: 0, translateY: 0 });
   let panMoved = $state(false);
@@ -277,19 +281,23 @@
     }
   });
 
-  $effect(() => {
-    const base = plotted || [];
-    const filtered = !query
-      ? base
-      : base.filter((label) => {
-          const q = query.toLowerCase();
-          return (
-            label.fanzine?.toLowerCase().includes(q) ||
-            label.city?.toLowerCase().includes(q) ||
-            label.genre?.toLowerCase().includes(q)
-          );
-        });
+  function matchesQuery(label, q) {
+    return (
+      label.fanzine?.toLowerCase().includes(q) ||
+      label.city?.toLowerCase().includes(q) ||
+      label.genre?.toLowerCase().includes(q)
+    );
+  }
 
+  let queryMatches = $derived.by(() => {
+    const base = plotted || [];
+    if (!query) return base;
+    const q = query.toLowerCase();
+    return base.filter((label) => matchesQuery(label, q));
+  });
+
+  $effect(() => {
+    const filtered = queryMatches;
     const padding = 120;
     filteredPlotted = filtered.filter((label) => {
       const screenX = viewTranslateX + label.x * viewScale;
@@ -301,6 +309,48 @@
         screenY < mapHeight + padding
       );
     });
+  });
+
+  $effect(() => {
+    if (!query) {
+      scheduleViewUpdate(
+        initialViewTranslateX,
+        initialViewTranslateY,
+        initialViewScale,
+      );
+      return;
+    }
+
+    const matches = queryMatches;
+    if (!matches.length) return;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const label of matches) {
+      const halfW = (label.width || 0) / 2;
+      const halfH = (label.height || 0) / 2;
+      minX = Math.min(minX, label.x - halfW, label.x0);
+      maxX = Math.max(maxX, label.x + halfW, label.x0);
+      minY = Math.min(minY, label.y - halfH, label.y0);
+      maxY = Math.max(maxY, label.y + halfH, label.y0);
+    }
+
+    const bboxWidth = Math.max(maxX - minX, 1);
+    const bboxHeight = Math.max(maxY - minY, 1);
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    const fitFraction = 0.8;
+    const scaleX = (mapWidth * fitFraction) / bboxWidth;
+    const scaleY = (mapHeight * fitFraction) / bboxHeight;
+    const nextScale = Math.max(0.5, Math.min(8, Math.min(scaleX, scaleY)));
+
+    const nextTranslateX = mapWidth / 2 - centerX * nextScale;
+    const nextTranslateY = mapHeight / 2 - centerY * nextScale;
+
+    scheduleViewUpdate(nextTranslateX, nextTranslateY, nextScale);
   });
 
   $effect(() => {

@@ -32,14 +32,20 @@
   let loading = $state(true);
   let error = $state("");
 
+  const MIN_QUERY_LENGTH = 4;
+
   let searchQuery = $state("");
   let selectedCity = $state(null);
   let viewportItems = $state([]);
 
+  let activeQuery = $derived(
+    searchQuery.trim().length >= MIN_QUERY_LENGTH ? searchQuery : "",
+  );
+
   let filteredCities = $derived(
-    searchQuery
+    activeQuery
       ? allFanzines.filter((f) => {
-          const q = searchQuery.toLowerCase();
+          const q = activeQuery.toLowerCase();
           return (
             f.fanzine?.toLowerCase().includes(q) ||
             f.city?.toLowerCase().includes(q) ||
@@ -50,9 +56,9 @@
   );
 
   let visibleCount = $derived(
-    searchQuery
+    activeQuery
       ? points.filter((p) => {
-          const q = searchQuery.toLowerCase();
+          const q = activeQuery.toLowerCase();
           return (
             p.fanzine?.toLowerCase().includes(q) ||
             p.city?.toLowerCase().includes(q) ||
@@ -128,12 +134,12 @@
       {italy}
       {points}
       {labelPlacements}
-      query={searchQuery}
+      query={activeQuery}
       projectionZoom={1}
       selectedLabel={selectedCity}
       filteredItems={selectedCity
         ? [selectedCity]
-        : searchQuery
+        : activeQuery
           ? filteredCities
           : allFanzines}
       onSelect={onMapSelect}
@@ -158,7 +164,7 @@
     <ResultsGrid
       items={selectedCity
         ? [selectedCity]
-        : searchQuery
+        : activeQuery
           ? filteredCities
           : viewportItems.length > 0
             ? viewportItems
