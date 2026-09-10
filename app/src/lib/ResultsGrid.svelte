@@ -3,8 +3,6 @@
 
   const baseUrl = "https://www.paolopalmacci.it/capitmundi/";
 
-  let expandedIndex = $state(null);
-
   let sortedItems = $derived.by(() => {
     const withImages = items.filter((item) => item.ogImage).sort((a, b) =>
       (a.fanzine || "").localeCompare(b.fanzine || "")
@@ -46,23 +44,17 @@
 </script>
 
 <div class="min-h-screen">
-  <div class="flex items-center justify-between px-0.5 py-2 text-xs">
-    <div class="text-black/70">
-      <strong class="text-black">{sortedItems.length}</strong> fanzine
-    </div>
-  </div>
-
   <div
-    class="grid grid-cols-2 md:grid-cols-8 gap-0.5 p-0.5"
+    class="grid grid-cols-2 md:grid-cols-4 gap-2 p-0.5"
     role="list"
     aria-label="Fanzines"
   >
     {#each sortedItems as item, i (itemKey(item, i))}
-      <div role="listitem" class=" bg-white p-0.5 text-left shadow-sm">
+      <div role="listitem" class="bg-white p-1.5 text-left shadow-sm">
         <div class="aspect-[3/4] w-full overflow-hidden bg-black/5">
           {#if item.ogImage}
             <img
-              class="h-full w-full object-fill"
+              class="h-full w-full object-cover"
               src={toAbsoluteUrl(item.ogImage)}
               alt={item.fanzine || "Fanzine cover"}
               loading="lazy"
@@ -70,37 +62,20 @@
           {/if}
         </div>
 
-        <div class="mt-0 mb-0.5 truncate font-bold leading-tight text-[.6rem]">
+        <div class="mt-1 mb-0.5 truncate font-bold leading-tight text-xs">
           {item.fanzine}
         </div>
-        <div class="truncate leading-tight text-[.6rem]">
+        <div class="truncate leading-tight text-xs">
           {item.city}{item.country ? `, ${item.country}` : ""}
         </div>
-        <div class="mt-0 line-clamp-2 leading-tight text-[.6rem]">
+        <div class="mt-0.5 line-clamp-2 leading-tight text-xs">
           {item.genre || "—"}{yearsLabel(item) ? ` · ${yearsLabel(item)}` : ""}
         </div>
 
-        {#if item.description}
-          <div class="mt-0.5 text-[.6rem] leading-snug text-black/60">
-            <div class={expandedIndex === i ? "" : "line-clamp-3"}>
-              {item.description}
-            </div>
-            <button
-              type="button"
-              class="mt-0.5 cursor-pointer text-[.6rem] font-medium text-blue-600 hover:text-blue-800"
-              on:click={() => {
-                expandedIndex = expandedIndex === i ? null : i;
-              }}
-            >
-              {expandedIndex === i ? "chiudi" : "leggi tutto"}
-            </button>
-          </div>
-        {/if}
-
-        <div class="mt-0.5 gap-0.5">
+        <div class="mt-1 flex gap-1">
           {#if item?.pdfHref}
             <a
-              class=" bg-black/5 px-0.5 py-0 text-[.6rem] hover:bg-black/10"
+              class="bg-black/5 px-1 py-0.5 text-xs hover:bg-black/10"
               href={toAbsoluteUrl(item.pdfHref)}
               target="_blank"
               rel="noreferrer"
@@ -110,7 +85,7 @@
           {/if}
           {#if item?.canonicalUrl}
             <a
-              class=" bg-black/5 px-0.5 py-0 text-[.6rem] text-black hover:bg-black/10"
+              class="bg-black/5 px-1 py-0.5 text-xs text-black hover:bg-black/10"
               href={item.canonicalUrl}
               target="_blank"
               rel="noreferrer"

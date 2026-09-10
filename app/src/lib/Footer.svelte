@@ -8,9 +8,9 @@
 </script>
 
 <footer
-  class="bg-black min-h-[200px] border-t text-xs text-white px-2 py-1"
+  class="bg-black min-h-[200px] border-t text-base text-white px-2 py-1"
 >
-  <div class="text-white max-w-[800px] mb-5">
+  <div class="text-white max-w-[840px] mb-5">
     <p class="mb-2">
       Questa è una mappatura della Rete delle Fanzine italiane originate dalla
       subcultura punk/nuovo rock negli anni ’80. Nell’Era del Telefono Fisso e

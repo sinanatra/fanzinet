@@ -1,6 +1,5 @@
 <script>
   import { csvParse } from "d3-dsv";
-  import Header from "$lib/Header.svelte";
   import Footer from "$lib/Footer.svelte";
   import Map from "$lib/Map.svelte";
   import SearchPanel from "$lib/SearchPanel.svelte";
@@ -117,10 +116,8 @@
   });
 </script>
 
-<Header />
-
-<div class="flex min-h-screen flex-col">
-  <div class="relative z-0 h-[65vh] w-full">
+<div class="flex min-h-screen flex-col md:h-screen md:flex-row">
+  <div class="relative z-0 h-[65vh] w-full md:h-full md:w-3/5">
     <div class="h-full w-full overflow-hidden bg-white">
     <!-- {#if loading}
         <div class="p-4 text-">Loading…</div>
@@ -146,7 +143,9 @@
     </div>
   </div>
 
-  <div class="relative mx-auto w-full flex-1 bg-white px-2 py-1">
+  <div
+    class="relative mx-auto w-full flex-1 bg-white px-2 py-1 md:w-2/5 md:overflow-y-auto"
+  >
     <SearchPanel
       bind:query={searchQuery}
       totalCount={allFanzines.length}

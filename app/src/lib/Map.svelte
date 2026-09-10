@@ -29,9 +29,9 @@
   const baseTranslateX = 0;
   const baseTranslateY = 0;
 
-  let viewScale = $state(1);
-  let viewTranslateX = $state(baseTranslateX);
-  let viewTranslateY = $state(baseTranslateY);
+  let viewScale = $state(1.3);
+  let viewTranslateX = $state(-214.46342976888013);
+  let viewTranslateY = $state(-2.5114542643229925);
   let panning = $state(false);
   let panStart = $state({ x: 0, y: 0, translateX: 0, translateY: 0 });
   let panMoved = $state(false);
@@ -43,9 +43,6 @@
   let rafId = $state(null);
   let pendingView = $state(null);
   let panZoomDisabled = $state(false);
-  let activePointers = $state(new Map());
-  let pinchActive = $state(false);
-  let pinchStart = $state(null);
 
   function svgPointFromEvent(e) {
     const svg = e.currentTarget?.ownerSVGElement || e.currentTarget;
@@ -70,17 +67,23 @@
     direction,
     zoomCenterX = mapWidth / 2,
     zoomCenterY = mapHeight / 2,
+    factor = null,
   ) {
     if (panZoomDisabled) return;
     const step = 1.2;
-    const factor = direction > 0 ? step : 1 / step;
-    const nextScale = Math.max(0.5, Math.min(8, viewScale * factor));
-    if (nextScale === viewScale) return;
+    if (factor == null) factor = direction > 0 ? step : 1 / step;
+    const currentScale = pendingView ? pendingView.scale : viewScale;
+    const currentTranslateX = pendingView ? pendingView.x : viewTranslateX;
+    const currentTranslateY = pendingView ? pendingView.y : viewTranslateY;
+    const nextScale = Math.max(0.5, Math.min(8, currentScale * factor));
+    if (nextScale === currentScale) return;
 
     const nextTranslateX =
-      zoomCenterX - ((zoomCenterX - viewTranslateX) / viewScale) * nextScale;
+      zoomCenterX -
+      ((zoomCenterX - currentTranslateX) / currentScale) * nextScale;
     const nextTranslateY =
-      zoomCenterY - ((zoomCenterY - viewTranslateY) / viewScale) * nextScale;
+      zoomCenterY -
+      ((zoomCenterY - currentTranslateY) / currentScale) * nextScale;
 
     scheduleViewUpdate(nextTranslateX, nextTranslateY, nextScale);
   }
@@ -133,17 +136,16 @@
     onvisibleItemsChange?.(visibleItems);
   }
 
-  function onWheel(e) {
-    if (panZoomDisabled) return;
-    e.preventDefault();
-    const direction = e.deltaY > 0 ? -1 : 1;
-    const m = svgPointFromEvent(e);
-    handleZoom(direction, m.x, m.y);
-  }
-
   function onPointerDown(e) {
     if (panZoomDisabled) return;
     if (e.button != null && e.button !== 0) return;
+
+    if (pendingView) {
+      viewTranslateX = pendingView.x;
+      viewTranslateY = pendingView.y;
+      viewScale = pendingView.scale;
+      pendingView = null;
+    }
     downOnLabel = isLabelHitEvent(e);
     panning = false;
     pendingPan = true;
@@ -151,26 +153,6 @@
     panMoved = false;
     isDragging = false;
     const m = svgPointFromEvent(e);
-    activePointers.set(e.pointerId, m);
-
-    if (activePointers.size === 2) {
-      const pts = Array.from(activePointers.values());
-      const dx = pts[1].x - pts[0].x;
-      const dy = pts[1].y - pts[0].y;
-      const distance = Math.hypot(dx, dy) || 1;
-      const center = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
-      pinchActive = true;
-      pinchStart = {
-        distance,
-        center,
-        scale: viewScale,
-        translateX: viewTranslateX,
-        translateY: viewTranslateY,
-      };
-      pendingPan = false;
-      panning = false;
-      return;
-    }
 
     panStart = {
       x: m.x,
@@ -182,33 +164,6 @@
 
   function onPointerMove(e) {
     if (panZoomDisabled) return;
-    if (activePointers.has(e.pointerId)) {
-      activePointers.set(e.pointerId, svgPointFromEvent(e));
-    }
-
-    if (pinchActive && activePointers.size >= 2 && pinchStart) {
-      const pts = Array.from(activePointers.values());
-      const dx = pts[1].x - pts[0].x;
-      const dy = pts[1].y - pts[0].y;
-      const distance = Math.hypot(dx, dy) || 1;
-      const ratio = distance / pinchStart.distance;
-      const nextScale = Math.max(0.5, Math.min(8, pinchStart.scale * ratio));
-      const center = {
-        x: (pts[0].x + pts[1].x) / 2,
-        y: (pts[0].y + pts[1].y) / 2,
-      };
-      const zoomCenterX = center.x;
-      const zoomCenterY = center.y;
-      const nextTranslateX =
-        zoomCenterX -
-        ((zoomCenterX - pinchStart.translateX) / pinchStart.scale) * nextScale;
-      const nextTranslateY =
-        zoomCenterY -
-        ((zoomCenterY - pinchStart.translateY) / pinchStart.scale) * nextScale;
-      scheduleViewUpdate(nextTranslateX, nextTranslateY, nextScale);
-      return;
-    }
-
     if (!pendingPan && !panning) return;
     if (activePointerId != null && e.pointerId !== activePointerId) return;
     const m = svgPointFromEvent(e);
@@ -240,13 +195,6 @@
   }
 
   function endPan(e, cancelled = false) {
-    if (activePointers.has(e?.pointerId)) {
-      activePointers.delete(e.pointerId);
-    }
-    if (activePointers.size < 2) {
-      pinchActive = false;
-      pinchStart = null;
-    }
     panning = false;
     pendingPan = false;
     activePointerId = null;
@@ -377,7 +325,7 @@
   });
 </script>
 
-<section class="bg-[#ccc]">
+<section class="relative h-full w-full bg-[#ccc]">
   
   <div class="absolute top-1 right-1 z-50 space-y-1 text-xs">
     <button
@@ -403,7 +351,6 @@
     preserveAspectRatio="xMidYMid meet"
     role="application"
     aria-label="Fanzine map (pan and zoom)"
-    on:wheel={onWheel}
     on:pointerdown={onPointerDown}
     on:pointermove={onPointerMove}
     on:pointerup={onPointerUp}
